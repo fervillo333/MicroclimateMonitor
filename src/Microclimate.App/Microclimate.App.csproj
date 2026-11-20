@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>microclimate</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Microclimate.Core\Microclimate.Core.csproj" />
+    <ProjectReference Include="..\Microclimate.Data\Microclimate.Data.csproj" />
+  </ItemGroup>
+</Project>
