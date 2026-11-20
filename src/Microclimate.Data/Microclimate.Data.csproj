@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Microclimate.Core\Microclimate.Core.csproj" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="$(SqliteVersion)" />
+  </ItemGroup>
+</Project>

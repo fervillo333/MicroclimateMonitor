@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <!-- Якщо у вас встановлено лише .NET 8: TargetFramework=net8.0 та SqliteVersion=8.0.* -->
+    <TargetFramework>net10.0</TargetFramework>
+    <SqliteVersion>10.0.*</SqliteVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Статичний аналіз (критерій C4): попередження видно при dotnet build -->
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="*" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
