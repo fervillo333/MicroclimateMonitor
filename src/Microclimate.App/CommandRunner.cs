@@ -83,6 +83,7 @@ public sealed class CommandRunner
         return 0;
     }
 
+
     private int AddRoom(string[] args)
     {
         if (args.Length < 2)
@@ -109,105 +110,117 @@ public sealed class CommandRunner
     }
 
     private int Simulate(string[] args)
+{
+    var withAnomaly = args.Contains("--anomaly");
+    var positional = args.Skip(1).Where(a => !a.StartsWith("--", StringComparison.Ordinal)).ToArray();
+
+    if (positional.Length == 0)
+        return Fail("Usage: simulate <room> [count] [--anomaly]");
+
+    var count = DefaultSimulationCount;
+    if (positional.Length > 1
+        && (!int.TryParse(positional[1], NumberStyles.None, CultureInfo.InvariantCulture, out count)
+            || count < 1 || count > MaxSimulationCount))
     {
-        var withAnomaly = args.Contains("--anomaly");
-        var positional = args.Skip(1).Where(a => !a.StartsWith("--", StringComparison.Ordinal)).ToArray();
+        return Fail($"Count must be an integer from 1 to {MaxSimulationCount}.");
+    }
 
-        if (positional.Length == 0)
-            return Fail("Usage: simulate <room> [count] [--anomaly]");
+    // Використання нового методу
+    if (!TryGetRoom(positional[0], out var room))
+        return 1;
 
-        var count = DefaultSimulationCount;
-        if (positional.Length > 1
-            && (!int.TryParse(positional[1], NumberStyles.None, CultureInfo.InvariantCulture, out count)
-                || count < 1 || count > MaxSimulationCount))
-        {
-            return Fail($"Count must be an integer from 1 to {MaxSimulationCount}.");
-        }
+    var step = TimeSpan.FromMinutes(5);
+    var start = DateTime.UtcNow - step * count;
+    var simulator = new SensorSimulator();
+    var pipeline = new MonitoringPipeline();
+    var alertTotal = 0;
 
-        var room = _rooms.GetByName(positional[0]);
-        if (room is null)
-            return Fail($"Room '{positional[0]}' not found.");
+    foreach (var reading in simulator.Generate(count, start, step, withAnomaly ? count / 2 : -1))
+    {
+        var alerts = pipeline.Process(reading);
+        _readings.SaveWithAlerts(room.Id, reading, alerts);
+        alertTotal += alerts.Count;
+    }
 
-        var step = TimeSpan.FromMinutes(5);
-        var start = DateTime.UtcNow - step * count;
-        var simulator = new SensorSimulator();
-        var pipeline = new MonitoringPipeline();
-        var alertTotal = 0;
+    _out.WriteLine($"Saved {count} readings, {alertTotal} alerts.");
+    return 0;
+}
 
-        foreach (var reading in simulator.Generate(count, start, step, withAnomaly ? count / 2 : -1))
-        {
-            var alerts = pipeline.Process(reading);
-            _readings.SaveWithAlerts(room.Id, reading, alerts);
-            alertTotal += alerts.Count;
-        }
+   private int Report(string[] args)
+{
+    if (args.Length < 2)
+        return Fail("Usage: report <room>");
 
-        _out.WriteLine($"Saved {count} readings, {alertTotal} alerts.");
+    // Використання нового методу
+    if (!TryGetRoom(args[1], out var room))
+        return 1;
+
+    var stats = _readings.GetStats(room.Id);
+    if (stats is null)
+    {
+        _out.WriteLine($"No readings for room '{room.Name}'.");
         return 0;
     }
 
-    private int Report(string[] args)
-    {
-        if (args.Length < 2)
-            return Fail("Usage: report <room>");
+    var latest = _readings.GetLatest(room.Id, 1)[0];
+    var analyzer = new ComfortAnalyzer();
+    var score = analyzer.ComfortScore(latest);
+    var dewPoint = ComfortAnalyzer.DewPointC(latest.TemperatureC, latest.HumidityPercent);
 
-        var room = _rooms.GetByName(args[1]);
-        if (room is null)
-            return Fail($"Room '{args[1]}' not found.");
-
-        var stats = _readings.GetStats(room.Id);
-        if (stats is null)
-        {
-            _out.WriteLine($"No readings for room '{room.Name}'.");
-            return 0;
-        }
-
-        var latest = _readings.GetLatest(room.Id, 1)[0];
-        var analyzer = new ComfortAnalyzer();
-        var score = analyzer.ComfortScore(latest);
-        var dewPoint = ComfortAnalyzer.DewPointC(latest.TemperatureC, latest.HumidityPercent);
-
-        var inv = CultureInfo.InvariantCulture;
-        _out.WriteLine($"Room: {room.Name}");
-        _out.WriteLine($"Readings: {stats.Count}");
-        _out.WriteLine(string.Create(inv, $"Avg temperature: {stats.AvgTemperatureC:F1} C"));
-        _out.WriteLine(string.Create(inv, $"Avg humidity: {stats.AvgHumidityPercent:F1} %"));
-        _out.WriteLine(string.Create(inv, $"Avg CO2: {stats.AvgCo2Ppm:F0} ppm (max {stats.MaxCo2Ppm:F0})"));
-        _out.WriteLine(string.Create(inv, $"Latest comfort score: {score:F0}/100, dew point {dewPoint:F1} C"));
-        return 0;
-    }
+    var inv = CultureInfo.InvariantCulture;
+    _out.WriteLine($"Room: {room.Name}");
+    _out.WriteLine($"Readings: {stats.Count}");
+    _out.WriteLine(string.Create(inv, $"Avg temperature: {stats.AvgTemperatureC:F1} C"));
+    _out.WriteLine(string.Create(inv, $"Avg humidity: {stats.AvgHumidityPercent:F1} %"));
+    _out.WriteLine(string.Create(inv, $"Avg CO2: {stats.AvgCo2Ppm:F0} ppm (max {stats.MaxCo2Ppm:F0})"));
+    _out.WriteLine(string.Create(inv, $"Latest comfort score: {score:F0}/100, dew point {dewPoint:F1} C"));
+    return 0;
+}
 
     private int ShowAlerts(string[] args)
+{
+    if (args.Length < 2)
+        return Fail("Usage: alerts <room> [limit]");
+
+    var limit = DefaultAlertLimit;
+    if (args.Length > 2
+        && (!int.TryParse(args[2], NumberStyles.None, CultureInfo.InvariantCulture, out limit) || limit < 1))
     {
-        if (args.Length < 2)
-            return Fail("Usage: alerts <room> [limit]");
+        return Fail("Limit must be a positive integer.");
+    }
 
-        var limit = DefaultAlertLimit;
-        if (args.Length > 2
-            && (!int.TryParse(args[2], NumberStyles.None, CultureInfo.InvariantCulture, out limit) || limit < 1))
-        {
-            return Fail("Limit must be a positive integer.");
-        }
+    // Використання нового методу
+    if (!TryGetRoom(args[1], out var room))
+        return 1;
 
-        var room = _rooms.GetByName(args[1]);
-        if (room is null)
-            return Fail($"Room '{args[1]}' not found.");
-
-        var alerts = _alerts.GetByRoom(room.Id, limit);
-        if (alerts.Count == 0)
-        {
-            _out.WriteLine("No alerts.");
-            return 0;
-        }
-
-        foreach (var stored in alerts)
-        {
-            var ts = stored.TimestampUtc.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
-            _out.WriteLine($"[{stored.Alert.Severity}] {stored.Alert.Type} {ts} - {stored.Alert.Message}");
-        }
-
+    var alerts = _alerts.GetByRoom(room.Id, limit);
+    if (alerts.Count == 0)
+    {
+        _out.WriteLine("No alerts.");
         return 0;
     }
 
+    foreach (var stored in alerts)
+    {
+        var ts = stored.TimestampUtc.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+        _out.WriteLine($"[{stored.Alert.Severity}] {stored.Alert.Type} {ts} - {stored.Alert.Message}");
+    }
+
+    return 0;
+}
+    private bool TryGetRoom(string name, out Room room)
+    {
+        var found = _rooms.GetByName(name);
+        if (found is null)
+        {
+            Fail($"Room '{name}' not found.");
+            room = null!;
+            return false;
+        }
+
+        room = found;
+        return true;
+    }
     private int Fail(string message)
     {
         _err.WriteLine(message);
