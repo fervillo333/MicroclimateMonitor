@@ -121,7 +121,8 @@ public sealed class ReadingRepository
         using var connection = _db.Open();
         using var command = connection.CreateCommand();
         command.CommandText =
-            "SELECT COUNT(*), AVG(temperature_c), AVG(humidity_percent), AVG(co2_ppm), MAX(co2_ppm) " +
+            "SELECT COUNT(*), AVG(temperature_c), AVG(humidity_percent), AVG(co2_ppm), MAX(co2_ppm), " +
+            "MIN(temperature_c), MAX(temperature_c) " +
             "FROM readings WHERE room_id = $room;";
         command.Parameters.AddWithValue("$room", roomId);
 
@@ -133,7 +134,8 @@ public sealed class ReadingRepository
         if (count == 0)
             return null;
 
-        return new ReadingStats(count, reader.GetDouble(1), reader.GetDouble(2), reader.GetDouble(3), reader.GetDouble(4));
+        return new ReadingStats(count, reader.GetDouble(1), reader.GetDouble(2), reader.GetDouble(3),
+            reader.GetDouble(4), reader.GetDouble(5), reader.GetDouble(6));
     }
 
     private static List<Reading> ReadAll(SqliteCommand command)
