@@ -153,6 +153,11 @@ public sealed class ReadingRepository
         return result;
     }
 
-    private static string FormatTimestamp(DateTime value) =>
-        value.ToUniversalTime().ToString(TimestampFormat, CultureInfo.InvariantCulture);
+    private static string FormatTimestamp(DateTime value)
+{
+    if (value.Kind != DateTimeKind.Utc)
+        throw new ArgumentException("Timestamp must be in UTC.", nameof(value));
+
+    return value.ToString(TimestampFormat, CultureInfo.InvariantCulture);
+}
 }
