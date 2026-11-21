@@ -12,6 +12,7 @@ public sealed class ComfortAnalyzer
     public ComfortAnalyzer(ComfortThresholds? thresholds = null)
     {
         _t = thresholds ?? ComfortThresholds.Default;
+        _t.EnsureValid();
     }
 
     /// <summary>Повертає список сповіщень (порожній, якщо все в нормі).</summary>
