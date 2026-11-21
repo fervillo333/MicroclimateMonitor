@@ -110,4 +110,9 @@ public class ComfortAnalyzerTests
     [Fact]
     public void DewPoint_ZeroHumidity_IsFinite() =>
         Assert.True(double.IsFinite(ComfortAnalyzer.DewPointC(20, 0)));
+
+    [Fact]
+    public void Constructor_InvalidThresholds_Throws() =>
+    Assert.Throws<ArgumentException>(() =>
+        new ComfortAnalyzer(new ComfortThresholds { TemperatureMinC = 30 }));
 }

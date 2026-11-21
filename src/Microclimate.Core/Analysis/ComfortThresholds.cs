@@ -20,4 +20,18 @@ public sealed record ComfortThresholds
     public double Co2Critical { get; init; } = 2000;
 
     public static ComfortThresholds Default { get; } = new();
+
+    public void EnsureValid()
+    {
+        if (!(TemperatureCriticalMinC <= TemperatureMinC && TemperatureMinC < TemperatureMaxC
+              && TemperatureMaxC <= TemperatureCriticalMaxC))
+            throw new ArgumentException("Temperature thresholds must satisfy criticalMin <= min < max <= criticalMax.");
+
+        if (!(HumidityCriticalMin <= HumidityMin && HumidityMin < HumidityMax
+              && HumidityMax <= HumidityCriticalMax))
+            throw new ArgumentException("Humidity thresholds must satisfy criticalMin <= min < max <= criticalMax.");
+
+        if (Co2Warning > Co2Critical)
+            throw new ArgumentException("CO2 warning threshold must not exceed critical threshold.");
+    }
 }
