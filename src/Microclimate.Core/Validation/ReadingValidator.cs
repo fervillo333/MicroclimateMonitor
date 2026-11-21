@@ -22,6 +22,9 @@ public static class ReadingValidator
         if (reading.TimestampUtc == default)
             errors.Add("Timestamp must be set.");
 
+        if (reading.TimestampUtc.Kind == DateTimeKind.Local)
+            errors.Add("Timestamp must be in UTC.");
+
         if (!IsInRange(reading.TemperatureC, MinTemperatureC, MaxTemperatureC))
             errors.Add($"Temperature must be a finite value between {MinTemperatureC} and {MaxTemperatureC} C.");
 

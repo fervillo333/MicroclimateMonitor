@@ -46,4 +46,12 @@ public class ReadingValidatorTests
     [Fact]
     public void Validate_Null_Throws() =>
         Assert.Throws<ArgumentNullException>(() => ReadingValidator.Validate(null!));
+
+    [Fact]
+    public void Validate_LocalTimestamp_ReturnsError()
+    {
+        var reading = new Microclimate.Core.Models.Reading(
+            new DateTime(2026, 1, 1, 12, 0, 0, DateTimeKind.Local), 22, 45, 600);
+        Assert.Contains(ReadingValidator.Validate(reading), e => e.Contains("UTC"));
+    }
 }
