@@ -24,8 +24,8 @@ internal static class Schema
         CREATE TABLE IF NOT EXISTS alerts (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
             reading_id INTEGER NOT NULL REFERENCES readings(id) ON DELETE CASCADE,
-            type       TEXT NOT NULL,
-            severity   TEXT NOT NULL,
+            type       INTEGER NOT NULL,
+            severity   INTEGER NOT NULL,
             message    TEXT NOT NULL
         );
 
