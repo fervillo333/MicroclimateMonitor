@@ -73,3 +73,9 @@ CI (GitHub Actions) збирає проєкт і ганяє тести на ubun
 | A | Core: моделі, валідація, аналіз комфорту, виявлення аномалій |
 | B | Data: схема БД, репозиторії, транзакції |
 | C | App: CLI, симулятор датчиків, CI, документація |
+
+## Типові проблеми
+
+- `NETSDK1045: The current .NET SDK does not support targeting .NET 10.0` — встановіть .NET SDK 10
+  (`winget install Microsoft.DotNet.SDK.10`) і перезапустіть термінал. Перевірка: `dotnet --list-sdks`.
+- Файл БД `microclimate.db` можна безпечно видалити — він створиться заново.
