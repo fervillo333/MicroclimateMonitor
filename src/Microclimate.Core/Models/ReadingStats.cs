@@ -6,4 +6,6 @@ public sealed record ReadingStats(
     double AvgTemperatureC,
     double AvgHumidityPercent,
     double AvgCo2Ppm,
-    double MaxCo2Ppm);
+    double MaxCo2Ppm,
+    double MinTemperatureC,
+    double MaxTemperatureC);

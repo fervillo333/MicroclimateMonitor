@@ -134,6 +134,8 @@ public class ReadingRepositoryTests
             Assert.Equal(45, stats.AvgHumidityPercent, 6);
             Assert.Equal(600, stats.AvgCo2Ppm, 6);
             Assert.Equal(700, stats.MaxCo2Ppm, 6);
+            Assert.Equal(20, stats.MinTemperatureC, 6);
+            Assert.Equal(24, stats.MaxTemperatureC, 6);
         }
     }
 }
