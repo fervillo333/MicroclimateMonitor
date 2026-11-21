@@ -14,7 +14,7 @@ internal static class Schema
             id               INTEGER PRIMARY KEY AUTOINCREMENT,
             room_id          INTEGER NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
             timestamp_utc    TEXT NOT NULL,
-            temperature_c    REAL NOT NULL CHECK (temperature_c BETWEEN -50 AND 100),
+            temperature_c    REAL NOT NULL CHECK (temperature_c BETWEEN -40 AND 85),
             humidity_percent REAL NOT NULL CHECK (humidity_percent BETWEEN 0 AND 100),
             co2_ppm          REAL NOT NULL CHECK (co2_ppm >= 0)
         );
